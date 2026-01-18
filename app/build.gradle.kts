@@ -60,6 +60,8 @@ dependencies {
 
 
 
+
+
 // CameraX (alternativa moderna a Camera API)
 val camerax_version = "1.3.1"
 implementation("androidx.camera:camera-core:$camerax_version")
@@ -72,8 +74,18 @@ implementation("com.google.accompanist:accompanist-permissions:0.34.0")
 // Google Play Services Location
 implementation("com.google.android.gms:play-services-location:21.1.0")
 
+// Jetpack Compose
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.activity:activity-compose:1.8.2")
 
-
+// Ubicación GPS
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+// Esta librería contiene DateRange y otros iconos extendidos
+    implementation("androidx.compose.material:material-icons-extended:1.5.3")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.material3:material3")
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("io.coil-kt:coil-compose:2.5.0")
 
 
 }

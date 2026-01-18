@@ -12,6 +12,8 @@
     <!-- Para guardar fotos (Android 12 y menores) -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
+    <!-- permisos adicionales para reto 2 -->
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:allowBackup="true"
@@ -56,6 +58,16 @@
             android:exported="false"
             android:label="Ubicación"
             android:theme="@style/Theme.MiApp" />
+        <activity
+            android:name=".FormularioActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ListaAccidentesActivity"
+            android:exported="false"
+            android:label="Lista de Accidentes"
+            android:theme="@style/Theme.MiApp" />
+
+
     </application>
 
 </manifest>

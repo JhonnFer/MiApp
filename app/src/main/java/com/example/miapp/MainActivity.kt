@@ -189,7 +189,47 @@ fun ComponentesBasicos(modifier: Modifier = Modifier) {
         }
 
         Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            "RETO 2"
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        //Button del formulario
+        Button(
+            onClick = {
+                val intent = Intent(context, FormularioActivity::class.java)
+                context.startActivity(intent)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.tertiary
+            )
+        ) {
+            Text("Formulario")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+
+        Button(
+            onClick = {
+                val intent = Intent(context, ListaAccidentesActivity::class.java)
+                context.startActivity(intent)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondary
+            )
+        ) {
+            Text("Ver Registros de Accidentes")
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+
     }
+
 }
 
 @Preview(showBackground = true)

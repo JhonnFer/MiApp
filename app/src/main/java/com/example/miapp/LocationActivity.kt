@@ -2,6 +2,8 @@ package com.example.miapp
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
 import android.location.Location
 import android.os.Bundle
 import android.os.Looper
@@ -22,11 +24,21 @@ import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import com.google.android.gms.location.*
 
 class LocationActivity : ComponentActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
             MiAppTheme {
-                LocationScreen()
+                LocationScreen { location ->
+                    // DEVOLVER RESULTADO A FORMULARIO
+                    val intent = Intent().apply {
+                        putExtra("LAT", location.latitude)
+                        putExtra("LON", location.longitude)
+                    }
+                    setResult(Activity.RESULT_OK, intent)
+                    finish()
+                }
             }
         }
     }
@@ -34,59 +46,55 @@ class LocationActivity : ComponentActivity() {
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
-fun LocationScreen() {
+fun LocationScreen(
+    onLocationObtained: (Location) -> Unit
+) {
     val context = LocalContext.current
     var currentLocation by remember { mutableStateOf<Location?>(null) }
-    var isLoadingLocation by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
 
-    // Estado de permisos de ubicación
-    val locationPermissions = rememberMultiplePermissionsState(
-        permissions = listOf(
+    // Permisos
+    val permissionsState = rememberMultiplePermissionsState(
+        listOf(
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_COARSE_LOCATION
         )
     )
 
-    // Cliente de ubicación
     val fusedLocationClient = remember {
         LocationServices.getFusedLocationProviderClient(context)
     }
 
-    // Callback de ubicación
     val locationCallback = remember {
         object : LocationCallback() {
-            override fun onLocationResult(locationResult: LocationResult) {
-                locationResult.lastLocation?.let { location ->
+            override fun onLocationResult(result: LocationResult) {
+                result.lastLocation?.let { location ->
                     currentLocation = location
-                    isLoadingLocation = false
+                    isLoading = false
+                    onLocationObtained(location) // ⬅️ devolver
                 }
             }
         }
     }
 
-    // Función para solicitar ubicación
     @SuppressLint("MissingPermission")
     fun requestLocation() {
-        if (locationPermissions.allPermissionsGranted) {
-            isLoadingLocation = true
+        if (!permissionsState.allPermissionsGranted) return
 
-            val locationRequest = LocationRequest.Builder(
-                Priority.PRIORITY_HIGH_ACCURACY,
-                10000L // Intervalo de actualización: 10 segundos
-            ).apply {
-                setMinUpdateIntervalMillis(5000L)
-                setMaxUpdates(1) // Solo obtener una vez
-            }.build()
+        isLoading = true
 
-            fusedLocationClient.requestLocationUpdates(
-                locationRequest,
-                locationCallback,
-                Looper.getMainLooper()
-            )
-        }
+        val request = LocationRequest.Builder(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            5000L
+        ).setMaxUpdates(1).build()
+
+        fusedLocationClient.requestLocationUpdates(
+            request,
+            locationCallback,
+            Looper.getMainLooper()
+        )
     }
 
-    // Limpiar al desmontar
     DisposableEffect(Unit) {
         onDispose {
             fusedLocationClient.removeLocationUpdates(locationCallback)
@@ -104,37 +112,32 @@ fun LocationScreen() {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+
             Icon(
                 imageVector = Icons.Default.LocationOn,
-                contentDescription = "Ubicación",
-                modifier = Modifier
-                    .size(80.dp)
-                    .padding(bottom = 16.dp),
+                contentDescription = null,
+                modifier = Modifier.size(80.dp),
                 tint = MaterialTheme.colorScheme.primary
             )
 
+            Spacer(modifier = Modifier.height(16.dp))
+
             Text(
-                text = "Obtener Ubicación",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 32.dp)
+                "Obtener Ubicación GPS",
+                style = MaterialTheme.typography.headlineMedium
             )
 
-            // Mostrar ubicación
+            Spacer(modifier = Modifier.height(24.dp))
+
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 24.dp),
+                modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
             ) {
-                Column(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    if (isLoadingLocation) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    if (isLoading) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(24.dp)
                             )
@@ -142,74 +145,34 @@ fun LocationScreen() {
                             Text("Obteniendo ubicación...")
                         }
                     } else {
-                        currentLocation?.let { location ->
-                            Text(
-                                text = "Ubicación Actual:",
-                                style = MaterialTheme.typography.titleMedium,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-                            Text("Latitud: ${location.latitude}")
-                            Text("Longitud: ${location.longitude}")
-                            Text("Precisión: ${location.accuracy} metros")
-                            Text("Altitud: ${location.altitude} m")
-                        } ?: run {
-                            Text("No se ha obtenido ubicación aún")
-                        }
+                        currentLocation?.let {
+                            Text("Latitud: ${it.latitude}")
+                            Text("Longitud: ${it.longitude}")
+                            Text("Precisión: ${it.accuracy} m")
+                        } ?: Text("Ubicación no obtenida")
                     }
                 }
             }
 
-            // Botón para obtener ubicación
+            Spacer(modifier = Modifier.height(24.dp))
+
             Button(
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading,
                 onClick = {
-                    if (locationPermissions.allPermissionsGranted) {
+                    if (permissionsState.allPermissionsGranted) {
                         requestLocation()
                     } else {
-                        locationPermissions.launchMultiplePermissionRequest()
+                        permissionsState.launchMultiplePermissionRequest()
                     }
-                },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoadingLocation
+                }
             ) {
                 Text(
-                    text = if (locationPermissions.allPermissionsGranted)
+                    if (permissionsState.allPermissionsGranted)
                         "Obtener Ubicación"
                     else
-                        "Solicitar Permisos de Ubicación"
+                        "Solicitar Permisos"
                 )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Estado de permisos
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
-                )
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(
-                        text = "Estado de permisos:",
-                        style = MaterialTheme.typography.titleSmall,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    Text(
-                        text = if (locationPermissions.allPermissionsGranted)
-                            "✅ Todos los permisos concedidos"
-                        else
-                            "❌ Faltan permisos por conceder"
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Nota: En Android 10+ necesitas habilitar 'Permitir todo el tiempo' para ubicación en segundo plano.",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                }
             }
         }
     }
