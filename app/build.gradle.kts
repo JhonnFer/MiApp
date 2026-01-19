@@ -6,14 +6,12 @@ plugins {
 
 android {
     namespace = "com.example.miapp"
-    compileSdk {
-        version = release(35)
-    }
+    compileSdk = 34 // Corregido: sintaxis simplificada
 
     defaultConfig {
         applicationId = "com.example.miapp"
-        minSdk = 35
-        targetSdk = 36
+        minSdk = 26
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -29,12 +27,14 @@ android {
             )
         }
     }
+
+    // Actualizado a Java 17 (Requerido por versiones modernas de Compose y CameraX)
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
+    // 1. Dependencias Core (vía libs.versions.toml)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -50,6 +51,23 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+
+    // 2. CameraX (Versiones unificadas para evitar errores de apertura)
+    val camerax_version = "1.3.1"
+    implementation("androidx.camera:camera-core:$camerax_version")
+    implementation("androidx.camera:camera-camera2:$camerax_version")
+    implementation("androidx.camera:camera-lifecycle:$camerax_version")
+    implementation("androidx.camera:camera-view:$camerax_version")
+
+    // 3. Permisos y Ubicación (Versiones únicas)
+    implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+    implementation("com.google.android.gms:play-services-location:21.1.0")
+
+    // 4. UI Extra e Iconos
+    implementation("androidx.compose.material:material-icons-extended:1.6.0")
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // 5. Testing
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -57,39 +75,4 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
-
-
-
-
-
-// CameraX (alternativa moderna a Camera API)
-val camerax_version = "1.3.1"
-implementation("androidx.camera:camera-core:$camerax_version")
-implementation("androidx.camera:camera-camera2:$camerax_version")
-implementation("androidx.camera:camera-lifecycle:$camerax_version")
-implementation("androidx.camera:camera-view:$camerax_version")
-
-// Para permisos en Compose
-implementation("com.google.accompanist:accompanist-permissions:0.34.0")
-// Google Play Services Location
-implementation("com.google.android.gms:play-services-location:21.1.0")
-
-// Jetpack Compose
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.activity:activity-compose:1.8.2")
-
-// Ubicación GPS
-    implementation("com.google.android.gms:play-services-location:21.0.1")
-// Esta librería contiene DateRange y otros iconos extendidos
-    implementation("androidx.compose.material:material-icons-extended:1.5.3")
-    implementation("androidx.compose.ui:ui")
-    implementation("androidx.compose.material3:material3")
-    implementation("androidx.activity:activity-compose:1.8.2")
-    implementation("io.coil-kt:coil-compose:2.5.0")
-
-
 }
-
-
-
-
